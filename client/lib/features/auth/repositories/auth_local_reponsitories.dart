@@ -13,29 +13,35 @@ AuthLocalReponsitories authLocalReponsitories(Ref ref) {
 class AuthLocalReponsitories {
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
+  SharedPreferences? _prefs;
+
+  // Khởi tạo SharedPreferences
+  Future<void> init() async {
+    _prefs ??= await SharedPreferences.getInstance();
+  }
 
   // Lưu token
   Future<void> setToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
+    await init();
+    await _prefs!.setString(_tokenKey, token);
   }
 
   // Lấy token
   Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+    await init();
+    return _prefs!.getString(_tokenKey);
   }
 
   // Lưu thông tin user
   Future<void> setUser(User user) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userKey, user.toJson());
+    await init();
+    await _prefs!.setString(_userKey, user.toJson());
   }
 
   // Lấy thông tin user
   Future<User?> getUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString(_userKey);
+    await init();
+    final userJson = _prefs!.getString(_userKey);
     if (userJson != null) {
       return User.fromJson(userJson);
     }
@@ -65,9 +71,9 @@ class AuthLocalReponsitories {
 
   // Xóa tất cả dữ liệu auth
   Future<void> clearAuth() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
+    await init();
+    await _prefs!.remove(_tokenKey);
+    await _prefs!.remove(_userKey);
   }
 
   // Kiểm tra có token không

@@ -61,7 +61,7 @@ class AuthRemoteReponsitories {
     }
   }
 
-  Future<Either<AppFailure, User>> getCurrentUser(String token) async {
+  Future<Either<AppFailure, Auth>> getCurrentUser(String token) async {
     try {
       var response = await http.post(Uri.parse('${Server.URL}/auth/'),
           headers: {'content-type': 'application/json', 'x-auth-token': token});
@@ -69,7 +69,7 @@ class AuthRemoteReponsitories {
       var responseDecode = (jsonDecode(response.body) as Map<String, dynamic>);
 
       if (response.statusCode == 200) {
-        return Right(User.fromMap(responseDecode));
+        return Right(Auth.fromMap(responseDecode));
       } else {
         return Left(AppFailure(responseDecode['detail']));
       }

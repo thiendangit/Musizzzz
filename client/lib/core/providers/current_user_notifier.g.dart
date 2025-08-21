@@ -1,26 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'auth_view_model.dart';
+part of 'current_user_notifier.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$authViewModelHash() => r'49e3a4b5d249df750c817b96aea8135b428aee30';
+String _$currentUserNotifierHash() =>
+    r'6bd763b776be7c663168d26476b7cc26844e0f7c';
 
-/// See also [AuthViewModel].
-@ProviderFor(AuthViewModel)
-final authViewModelProvider =
-    AutoDisposeNotifierProvider<AuthViewModel, AuthState>.internal(
-  AuthViewModel.new,
-  name: r'authViewModelProvider',
+/// See also [CurrentUserNotifier].
+@ProviderFor(CurrentUserNotifier)
+final currentUserNotifierProvider =
+    NotifierProvider<CurrentUserNotifier, Auth?>.internal(
+  CurrentUserNotifier.new,
+  name: r'currentUserNotifierProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$authViewModelHash,
+      : _$currentUserNotifierHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$AuthViewModel = AutoDisposeNotifier<AuthState>;
+typedef _$CurrentUserNotifier = Notifier<Auth?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

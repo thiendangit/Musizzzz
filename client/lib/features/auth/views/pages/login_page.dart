@@ -1,19 +1,19 @@
 import 'package:client/core/theme/app_pallete.dart';
-import 'package:client/features/auth/models/auth.dart';
-import 'package:client/features/auth/repositories/auth_remote_reponsitories.dart';
+import 'package:client/features/auth/viewModels/auth_view_model.dart';
 import 'package:client/features/auth/views/widgets/auth_gradient_button.dart';
 import 'package:client/features/auth/views/widgets/custom_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
@@ -27,41 +27,11 @@ class _LoginPageState extends State<LoginPage> {
 
   void loginUser() async {
     if (formKey.currentState!.validate()) {
-      var user = UserLogin(
-          email: emailController.text, password: passwordController.text);
-      var response = await AuthRemoteReponsitories().signIn(user);
-
-      response.fold(
-        (failure) {
-          // Handle signup failure (show error message)
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(failure.message), // Access the message property
-              backgroundColor: Colors.red,
-            ),
+      // Use AuthViewModel instead of calling repository directly
+      await ref.read(authViewModelProvider.notifier).signIn(
+            email: emailController.text,
+            password: passwordController.text,
           );
-        },
-        (auth) {
-          // Assuming response is a Right type on success
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Signin Successful'),
-                content: const Text('You have successfully logged in!'),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Close the dialog
-                    },
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
-        },
-      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -74,6 +44,32 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch the auth state to show loading and handle success/error
+    final authState = ref.watch(authViewModelProvider);
+
+    // Show loading indicator when signing in
+    if (authState.isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // Show error message if there's an error
+    if (authState.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authState.errorMessage!),
+            backgroundColor: Colors.red,
+          ),
+        );
+        // Clear the error after showing
+        ref.read(authViewModelProvider.notifier).clearError();
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(),
       body: Padding(
