@@ -3,24 +3,29 @@ import 'package:client/core/theme/app_pallete.dart';
 
 class CustomField extends StatelessWidget {
   final String hintText;
-  final TextEditingController controller;
+  final TextEditingController? controller;
   final bool obscureText;
   final String? Function(String?)? validator;
+  final bool readOnly;
+  final VoidCallback? onTab;
 
-  const CustomField({
-    super.key,
-    required this.hintText,
-    required this.controller,
-    this.obscureText = false,
-    this.validator,
-  });
+  const CustomField(
+      {super.key,
+      required this.hintText,
+      required this.controller,
+      this.obscureText = false,
+      this.validator,
+      this.readOnly = false,
+      this.onTab});
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      readOnly: readOnly,
       controller: controller,
       obscureText: obscureText,
       validator: validator,
+      onTap: onTab,
       decoration: InputDecoration(
         hintText: hintText,
         border: OutlineInputBorder(
@@ -31,8 +36,8 @@ class CustomField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: Pallete.gradient2,
+          borderSide: BorderSide(
+            color: readOnly ? Pallete.borderColor : Pallete.gradient2,
             width: 2,
           ),
         ),
