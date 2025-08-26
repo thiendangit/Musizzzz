@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:client/core/theme/app_pallete.dart';
 import 'package:client/core/utils/file_picker.dart';
 import 'package:client/features/auth/views/widgets/custom_field.dart';
+import 'package:client/features/home/widgets/audio_wave.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
@@ -101,13 +102,24 @@ class _UploadSongPageState extends ConsumerState<UploadSongPage> {
             padding: const EdgeInsets.all(10),
             child: Column(children: [
               const SizedBox(height: 10),
-              CustomField(
-                hintText: 'Pick Song',
-                controller: _songController,
-                readOnly: true,
-                onTab: () {
-                  // TODO: Implement song pick
-                },
+              GestureDetector(
+                onTap: selectSong,
+                child: songFile != null
+                    ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Pallete.borderColor),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: AudioWave(audioPath: songFile!.path),
+                      )
+                    : CustomField(
+                        hintText: 'Pick Song',
+                        controller: _songController,
+                        readOnly: true,
+                        onTab: selectSong,
+                      ),
               ),
               const SizedBox(height: 20),
               CustomField(
