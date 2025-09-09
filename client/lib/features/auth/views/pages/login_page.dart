@@ -17,6 +17,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
+  String? _lastShownError;
 
   @override
   void dispose() {
@@ -27,6 +28,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   void loginUser() async {
     if (formKey.currentState!.validate()) {
+      // Clear any previous error state when attempting new login
+      _lastShownError = null;
+
       // Use AuthViewModel instead of calling repository directly
       await ref.read(authViewModelProvider.notifier).signIn(
             email: emailController.text,
@@ -56,17 +60,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       );
     }
 
-    // Show error message if there's an error
-    if (authState.errorMessage != null) {
+    // Show error message if there's an error (only once per unique error)
+    if (authState.errorMessage != null &&
+        authState.errorMessage != _lastShownError) {
+      _lastShownError = authState.errorMessage;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authState.errorMessage!),
-            backgroundColor: Colors.red,
-          ),
-        );
-        // Clear the error after showing
-        ref.read(authViewModelProvider.notifier).clearError();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authState.errorMessage!),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          // Clear the error after showing
+          ref.read(authViewModelProvider.notifier).clearError();
+        }
       });
     }
 

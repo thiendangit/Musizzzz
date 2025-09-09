@@ -78,6 +78,7 @@ class AuthViewModel extends _$AuthViewModel {
     );
 
     final result = await _authRemoteRepo.signIn(user);
+    print(result);
 
     result.fold(
       (failure) {

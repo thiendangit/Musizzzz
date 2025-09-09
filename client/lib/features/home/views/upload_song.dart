@@ -23,22 +23,66 @@ class _UploadSongPageState extends ConsumerState<UploadSongPage> {
   Color selectedColor = Colors.red;
   File? songFile;
   File? thumbnailFile;
+  bool _isSelectingSong = false;
+  bool _isSelectingThumbnail = false;
 
   void selectSong() async {
-    final file = await pickAudioFile();
-    if (file != null) {
-      setState(() {
-        songFile = file;
-      });
+    if (_isSelectingSong || _isSelectingThumbnail)
+      return; // Prevent multiple requests
+
+    setState(() {
+      _isSelectingSong = true;
+    });
+
+    try {
+      final file = await pickAudioFile();
+      if (file != null) {
+        setState(() {
+          songFile = file;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error selecting song: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSelectingSong = false;
+        });
+      }
     }
   }
 
   void selectThumbnail() async {
-    final file = await pickImageFile();
-    if (file != null) {
-      setState(() {
-        thumbnailFile = file;
-      });
+    if (_isSelectingSong || _isSelectingThumbnail)
+      return; // Prevent multiple requests
+
+    setState(() {
+      _isSelectingThumbnail = true;
+    });
+
+    try {
+      final file = await pickImageFile();
+      if (file != null) {
+        setState(() {
+          thumbnailFile = file;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error selecting thumbnail: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSelectingThumbnail = false;
+        });
+      }
     }
   }
 
@@ -60,21 +104,21 @@ class _UploadSongPageState extends ConsumerState<UploadSongPage> {
           Padding(
             padding: const EdgeInsets.all(10),
             child: GestureDetector(
-              onTap: selectThumbnail,
+              onTap: _isSelectingThumbnail ? null : selectThumbnail,
               child: thumbnailFile != null
                   ? SizedBox(
                       width: double.infinity,
                       height: 150,
                       child: ClipRRect(
-                        borderRadius: BorderRadiusGeometry.circular(20),
+                        borderRadius: BorderRadius.circular(20),
                         child: Image.file(
                           thumbnailFile!,
                           fit: BoxFit.cover,
                         ),
                       ),
                     )
-                  : const DottedBorder(
-                      options: RoundedRectDottedBorderOptions(
+                  : DottedBorder(
+                      options: const RoundedRectDottedBorderOptions(
                         dashPattern: [10, 3],
                         strokeWidth: 2,
                         radius: Radius.circular(16),
@@ -86,12 +130,17 @@ class _UploadSongPageState extends ConsumerState<UploadSongPage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.folder_open,
-                                  size: 40, color: Pallete.greyColor),
-                              SizedBox(height: 15),
+                              _isSelectingThumbnail
+                                  ? const CircularProgressIndicator()
+                                  : const Icon(Icons.folder_open,
+                                      size: 40, color: Pallete.greyColor),
+                              const SizedBox(height: 15),
                               Text(
-                                'Select the thumnail for your song',
-                                style: TextStyle(color: Pallete.greyColor),
+                                _isSelectingThumbnail
+                                    ? 'Selecting thumbnail...'
+                                    : 'Select the thumbnail for your song',
+                                style:
+                                    const TextStyle(color: Pallete.greyColor),
                               ),
                             ],
                           )),
@@ -102,25 +151,23 @@ class _UploadSongPageState extends ConsumerState<UploadSongPage> {
             padding: const EdgeInsets.all(10),
             child: Column(children: [
               const SizedBox(height: 10),
-              GestureDetector(
-                onTap: selectSong,
-                child: songFile != null
-                    ? Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Pallete.borderColor),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: AudioWave(audioPath: songFile!.path),
-                      )
-                    : CustomField(
-                        hintText: 'Pick Song',
-                        controller: _songController,
-                        readOnly: true,
-                        onTab: selectSong,
+              songFile != null
+                  ? Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Pallete.borderColor),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-              ),
+                      child: AudioWave(audioPath: songFile!.path),
+                    )
+                  : CustomField(
+                      hintText:
+                          _isSelectingSong ? 'Selecting song...' : 'Pick Song',
+                      controller: _songController,
+                      readOnly: true,
+                      onTab: _isSelectingSong ? null : selectSong,
+                    ),
               const SizedBox(height: 20),
               CustomField(
                 hintText: 'Artist',

@@ -10,16 +10,21 @@ from email.mime.text import MIMEText
 from pydantic import BaseModel
 import jwt  # Import JWT library
 import datetime
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 router = APIRouter()
 
 class ForgotPasswordRequest(BaseModel):
     email: str
 
-SECRET_KEY = "your_secret_key"  # Replace with your actual secret key
-ALGORITHM = "HS256"  # Algorithm for encoding the JWT
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback_secret_key_for_development")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
-def create_access_token(data: dict, expires_delta: datetime.timedelta = None):
+def create_access_token(data: dict, expires_delta: datetime.timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.datetime.now() + expires_delta
@@ -30,8 +35,7 @@ def create_access_token(data: dict, expires_delta: datetime.timedelta = None):
     return encoded_jwt
 
 @router.post("/signup/", status_code=200, response_model=UserSchema)
-async def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    print(f"Creating user: {user}")
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # Check if email exists
     existing_user = db.query(UserModel).filter(UserModel.email == user.email).first()
 
@@ -57,8 +61,7 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/login/", response_model=LoginResponse)
-async def login(user: UserLogin, db: Session = Depends(get_db)):
-    print(f"Login attempt for email: {user.email}")
+def login(user: UserLogin, db: Session = Depends(get_db)):
     existing_user = db.query(UserModel).filter(UserModel.email == user.email).first()
 
     if not existing_user:
@@ -67,7 +70,7 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
             detail="Email not exist."
         )
     
-    match_password = verify_password(user.password, existing_user.password)
+    match_password = verify_password(user.password, str(existing_user.password))
 
     if match_password:
         access_token = create_access_token(data={"sub": existing_user.email})
@@ -83,7 +86,7 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
         )
 
 @router.post("/forgot-password/")
-async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
     # Check if the user exists
     user = db.query(UserModel).filter(UserModel.email == request.email).first()
     if not user:
@@ -93,7 +96,7 @@ async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(
     reset_token = str(uuid.uuid4())  # Example token generation
 
     # Send email with the reset link (you need to implement this function)
-    send_reset_email(user.email, reset_token)
+    send_reset_email(str(user.email), reset_token)
 
     return {"message": "Reset link sent to your email"}
 

@@ -1,10 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import auth
-# Import thêm các router khác
-# from api.endpoints import auth
-# from api.endpoints import music
-# from api.endpoints import playlist
+from app.api.endpoints import auth, song
 
 api_router = APIRouter()
 
@@ -13,6 +9,13 @@ api_router.include_router(
     auth.router,
     prefix="/auth",
     tags=["auth"]
+)
+
+# Songs routes
+api_router.include_router(
+    song.router,
+    prefix="/song", 
+    tags=["song"]
 )
 
 # Auth routes
