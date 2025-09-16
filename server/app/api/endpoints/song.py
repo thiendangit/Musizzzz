@@ -5,6 +5,7 @@ from app.db.database import get_db
 from app.schemas.song import SongCreate, SongUploadRequest, SongResponse
 from app.models.song import Song
 from app.utils.auth import get_current_user
+from app.models.auth import User
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
@@ -21,14 +22,17 @@ cloudinary.config(
 
 @router.post("/upload-song")
 def upload_song(
-    name: str = Form(...),
+    title: str = Form(...),
     artist: str = Form(...),
-    hex_code: str = Form(...),
+    color: str = Form(...),
     thumbnail: UploadFile = File(...),
-    song_file: UploadFile = File(...),
+    song: UploadFile = File(...),
     db: Session = Depends(get_db),
-    auth_dict: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
+
+    print(f'Upload request from user: {current_user.email}')
+    print(f'Title: {title}, Artist: {artist}, Color: {color}')
     # Upload thumbnail to Cloudinary
     thumbnail_result = cloudinary.uploader.upload(
         thumbnail.file,
@@ -40,7 +44,7 @@ def upload_song(
     
     # Upload song file to Cloudinary
     song_result = cloudinary.uploader.upload(
-        song_file.file,
+        song.file,
         resource_type="video",  # Cloudinary uses 'video' for audio files
         use_filename=True,
         unique_filename=True,

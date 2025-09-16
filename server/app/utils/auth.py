@@ -9,8 +9,13 @@ import jwt
 pwd_context = CryptContext(schemes = ["bcrypt"], deprecated = "auto")
 security = HTTPBearer()
 
-SECRET_KEY = "your_secret_key"  # Should match the one in auth.py
-ALGORITHM = "HS256"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback_secret_key_for_development")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -28,16 +33,23 @@ def get_current_user(
     Dependency to get the current authenticated user from JWT token
     """
     try:
+        print(f"Received token: {credentials.credentials}")
+        print(f"Using SECRET_KEY: {SECRET_KEY}")
+        print(f"Using ALGORITHM: {ALGORITHM}")
+        
         # Decode the JWT token
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        print(f"Decoded payload: {payload}")
         email: str = payload.get("sub")
         if email is None:
+            print("No email found in token payload")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as e:
+        print(f"JWT Error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -45,12 +57,15 @@ def get_current_user(
         )
     
     # Get user from database
+    print(f"Looking for user with email: {email}")
     user = db.query(User).filter(User.email == email).first()
     if user is None:
+        print(f"User not found in database for email: {email}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    print(f"User found: {user.email}")
     return user

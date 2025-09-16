@@ -1,13 +1,24 @@
 import 'dart:io';
 
+import 'package:client/core/failure/failure.dart';
 import 'package:client/core/theme/app_pallete.dart';
 import 'package:client/core/utils/file_picker.dart';
 import 'package:client/features/auth/views/widgets/custom_field.dart';
+import 'package:client/features/home/models/song.dart';
+import 'package:client/features/home/repositories/home_repositories.dart';
+import 'package:client/features/auth/repositories/auth_local_reponsitories.dart';
 import 'package:client/features/home/widgets/audio_wave.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
+
+// Simple provider for HomeRemoteReponsitories
+final homeRemoteReponsitoriesProvider =
+    Provider<HomeRemoteReponsitories>((ref) {
+  return HomeRemoteReponsitories();
+});
 
 class UploadSongPage extends ConsumerStatefulWidget {
   const UploadSongPage({super.key});
@@ -93,7 +104,74 @@ class _UploadSongPageState extends ConsumerState<UploadSongPage> {
         title: const Text('Upload Song'),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () async {
+              if (!mounted) return;
+              final messenger = ScaffoldMessenger.of(context);
+
+              // Check if user is authenticated first
+              final authRepo = ref.read(authLocalReponsitoriesProvider);
+              final hasAuth = await authRepo.isAuthenticated();
+
+              if (!hasAuth) {
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Please login to upload songs')),
+                );
+                return;
+              }
+
+              // Validate inputs
+              if (songFile == null || thumbnailFile == null) {
+                messenger.showSnackBar(
+                  const SnackBar(
+                      content: Text('Please select both song and thumbnail')),
+                );
+                return;
+              }
+
+              if (_songNameController.text.trim().isEmpty ||
+                  _artistController.text.trim().isEmpty) {
+                messenger.showSnackBar(
+                  const SnackBar(
+                      content: Text('Please fill in song name and artist')),
+                );
+                return;
+              }
+
+              final homeRepo = ref.read(homeRemoteReponsitoriesProvider);
+              final result = await homeRepo.uploadSong(
+                  SongCreate(
+                    title: _songNameController.text.trim(),
+                    artist: _artistController.text.trim(),
+                    song: songFile!,
+                    thumbnail: thumbnailFile!,
+                    color: selectedColor.toString(),
+                  ),
+                  ref);
+
+              if (!mounted) return;
+
+              if (result.isRight()) {
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Song uploaded successfully')),
+                );
+                // Clear form
+                _songNameController.clear();
+                _artistController.clear();
+                setState(() {
+                  songFile = null;
+                  thumbnailFile = null;
+                  selectedColor = Colors.red;
+                });
+              } else {
+                messenger.showSnackBar(
+                  SnackBar(
+                      content: Text(result
+                          .getLeft()
+                          .getOrElse(() => AppFailure('Unknown error'))
+                          .message)),
+                );
+              }
+            },
             icon: const Icon(Icons.save_as),
           )
         ],
