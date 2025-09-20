@@ -1,4 +1,5 @@
 import os
+import uuid
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
 from app.db.database import get_db 
@@ -8,7 +9,6 @@ from app.utils.auth import get_current_user
 from app.models.auth import User
 import cloudinary
 import cloudinary.uploader
-import cloudinary.api
 
 
 router = APIRouter()
@@ -30,9 +30,6 @@ def upload_song(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-
-    print(f'Upload request from user: {current_user.email}')
-    print(f'Title: {title}, Artist: {artist}, Color: {color}')
     # Upload thumbnail to Cloudinary
     thumbnail_result = cloudinary.uploader.upload(
         thumbnail.file,
@@ -50,9 +47,19 @@ def upload_song(
         unique_filename=True,
         folder="songs"
     )
+
+    create_song = Song(
+        id=str(uuid.uuid4()),
+        name=title,
+        artist=artist,
+        hex_code=color,
+        thumbnail=thumbnail_result.get("secure_url"),
+        song_file=song_result.get("secure_url"),
+        user_id=current_user.id
+    )
+
+    db.add(create_song)
+    db.commit()
+    db.refresh(create_song)
     
-    return {
-        "message": "Files uploaded successfully",
-        "thumbnail_url": thumbnail_result.get("secure_url"),
-        "song_url": song_result.get("secure_url")
-    }
+    return create_song

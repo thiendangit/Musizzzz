@@ -32,14 +32,9 @@ def get_current_user(
     """
     Dependency to get the current authenticated user from JWT token
     """
-    try:
-        print(f"Received token: {credentials.credentials}")
-        print(f"Using SECRET_KEY: {SECRET_KEY}")
-        print(f"Using ALGORITHM: {ALGORITHM}")
-        
+    try:     
         # Decode the JWT token
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-        print(f"Decoded payload: {payload}")
         email: str = payload.get("sub")
         if email is None:
             print("No email found in token payload")
@@ -49,7 +44,6 @@ def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
     except jwt.PyJWTError as e:
-        print(f"JWT Error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -57,15 +51,12 @@ def get_current_user(
         )
     
     # Get user from database
-    print(f"Looking for user with email: {email}")
     user = db.query(User).filter(User.email == email).first()
     if user is None:
-        print(f"User not found in database for email: {email}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    print(f"User found: {user.email}")
     return user

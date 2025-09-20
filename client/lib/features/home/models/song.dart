@@ -65,12 +65,12 @@ class Song {
 
   factory Song.fromMap(Map<String, dynamic> map) {
     return Song(
-      id: map['id'],
-      title: map['title'],
-      artist: map['artist'],
-      song: map['song'],
-      thumbnail: map['thumbnail'],
-      color: map['color'],
+      id: map['id']?.toString() ?? '',
+      title: map['title']?.toString() ?? '',
+      artist: map['artist']?.toString() ?? '',
+      song: map['song']?.toString() ?? '',
+      thumbnail: map['thumbnail']?.toString() ?? '',
+      color: map['color']?.toString() ?? '',
     );
   }
 }

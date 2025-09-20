@@ -7,10 +7,16 @@ import 'package:client/features/home/models/song.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+part 'home_repositories.g.dart';
+
+@riverpod
+HomeRemoteReponsitories homeRemoteReponsitories(Ref ref) {
+  return HomeRemoteReponsitories();
+}
 
 class HomeRemoteReponsitories {
-  Future<Either<AppFailure, Song>> uploadSong(
-      SongCreate song, WidgetRef ref) async {
+  Future<Either<AppFailure, Song>> uploadSong(SongCreate song, Ref ref) async {
     try {
       final request = http.MultipartRequest(
         'POST',
