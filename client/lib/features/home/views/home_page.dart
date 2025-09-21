@@ -1,5 +1,6 @@
 import 'package:client/features/home/views/library_page.dart';
 import 'package:client/features/home/views/songs_page.dart';
+import 'package:client/features/home/widgets/music_slab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,7 +17,12 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: pages[_selectedIndex],
+      body: Stack(
+        children: [
+          pages[_selectedIndex],
+          const Positioned(bottom: 0, child: MusicSlab())
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
