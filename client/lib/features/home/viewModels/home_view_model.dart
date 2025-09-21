@@ -9,6 +9,18 @@ import 'package:fpdart/fpdart.dart';
 part 'home_view_model.g.dart';
 
 @riverpod
+Future<List<Song>> getSongs(Ref ref) async {
+  final homeRemoteRepo = ref.watch(homeRemoteReponsitoriesProvider);
+
+  final result = await homeRemoteRepo.getSongs(ref);
+
+  return result.fold(
+    (failure) => throw failure,
+    (songs) => songs,
+  );
+}
+
+@riverpod
 class HomeViewModel extends _$HomeViewModel {
   late final HomeRemoteReponsitories _homeRemoteRepo;
 

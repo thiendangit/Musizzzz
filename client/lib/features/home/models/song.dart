@@ -37,40 +37,44 @@ class SongCreate {
 
 class Song {
   String id;
-  String title;
+  String name;
   String artist;
-  String song;
+  String songFile;
   String thumbnail;
-  String color;
+  String hexCode;
+  String userId;
 
   Song({
     required this.id,
-    required this.title,
+    required this.name,
     required this.artist,
-    required this.song,
+    required this.songFile,
     required this.thumbnail,
-    required this.color,
+    required this.hexCode,
+    required this.userId,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'title': title,
+      'name': name,
       'artist': artist,
-      'song': song,
+      'song_file': songFile,
       'thumbnail': thumbnail,
-      'color': color,
+      'hex_code': hexCode,
+      'user_id': userId,
     };
   }
 
   factory Song.fromMap(Map<String, dynamic> map) {
     return Song(
       id: map['id']?.toString() ?? '',
-      title: map['title']?.toString() ?? '',
+      name: map['name']?.toString() ?? '',
       artist: map['artist']?.toString() ?? '',
-      song: map['song']?.toString() ?? '',
+      songFile: map['song_file']?.toString() ?? '',
       thumbnail: map['thumbnail']?.toString() ?? '',
-      color: map['color']?.toString() ?? '',
+      hexCode: map['hex_code']?.toString() ?? '',
+      userId: map['user_id']?.toString() ?? '',
     );
   }
 }

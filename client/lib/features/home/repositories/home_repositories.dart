@@ -59,4 +59,34 @@ class HomeRemoteReponsitories {
       return Left(AppFailure(e.toString()));
     }
   }
+
+  Future<Either<AppFailure, List<Song>>> getSongs(Ref ref) async {
+    try {
+      final token = await ref.read(authLocalReponsitoriesProvider).getToken();
+
+      if (token == null || token.isEmpty) {
+        return Left(
+            AppFailure('No authentication token found. Please login again.'));
+      }
+
+      final response = await http.get(
+        Uri.parse('${Server.URL}/song/get-songs'),
+        headers: {
+          'accept': 'application/json',
+          'Authorization': 'Bearer $token',
+          'x-auth-token': token,
+        },
+      );
+
+      final responseDecode = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final songsList = responseDecode as List<dynamic>;
+        return Right(songsList.map((e) => Song.fromMap(e)).toList());
+      } else {
+        return Left(AppFailure(responseDecode['detail']));
+      }
+    } catch (e) {
+      return Left(AppFailure(e.toString()));
+    }
+  }
 }

@@ -95,9 +95,7 @@ class _MyAppState extends ConsumerState<MyApp> {
           floatingLabelBehavior: FloatingLabelBehavior.always,
         ),
       ),
-      home: currentUser == null
-          ? const LoginPageWrapper()
-          : const UploadSongPage(),
+      home: currentUser == null ? const LoginPageWrapper() : const HomePage(),
       routes: {
         '/signup': (context) => const SignupPageWrapper(),
         '/forgot-password': (context) => const ForgotPasswordPageWrapper(),

@@ -63,3 +63,12 @@ def upload_song(
     db.refresh(create_song)
     
     return create_song
+
+
+@router.get("/get-songs")
+def get_songs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    songs = db.query(Song).all()
+    return songs
