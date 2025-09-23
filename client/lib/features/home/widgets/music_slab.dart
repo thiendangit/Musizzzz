@@ -34,52 +34,67 @@ class MusicSlab extends ConsumerWidget {
             MaterialPageRoute(
                 builder: (context) => MusicPlayer(song: currentSong)));
       },
-      child: Container(
-          height: 60,
-          width: MediaQuery.of(context).size.width,
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  image: DecorationImage(
-                      image: NetworkImage(currentSong.thumbnail),
-                      fit: BoxFit.cover),
-                ),
+      child: Stack(
+        children: [
+          Container(
+              height: 60,
+              width: MediaQuery.of(context).size.width,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: backgroundColor,
               ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Row(
                 children: [
-                  Text(currentSong.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text(currentSong.artist,
-                      style: const TextStyle(
-                          color: Pallete.subtitleText, fontSize: 12)),
+                  Hero(
+                      tag: currentSong.id,
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          image: DecorationImage(
+                              image: NetworkImage(currentSong.thumbnail),
+                              fit: BoxFit.cover),
+                        ),
+                      )),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(currentSong.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(currentSong.artist,
+                          style: const TextStyle(
+                              color: Pallete.subtitleText, fontSize: 12)),
+                    ],
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.favorite_outline),
+                  ),
+                  IconButton(
+                    onPressed: () async {
+                      await ref
+                          .read(currentSongStateProvider.notifier)
+                          .pauseSong();
+                    },
+                    icon: isPlaying
+                        ? const Icon(Icons.pause_outlined)
+                        : const Icon(Icons.play_arrow_outlined),
+                  ),
                 ],
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.favorite_outline),
-              ),
-              IconButton(
-                onPressed: () async {
-                  await ref.read(currentSongStateProvider.notifier).pauseSong();
-                },
-                icon: isPlaying
-                    ? const Icon(Icons.pause_outlined)
-                    : const Icon(Icons.play_arrow_outlined),
-              ),
-            ],
-          )),
+              )),
+          Positioned(
+              bottom: 0,
+              child: Container(
+                height: 2,
+                width: MediaQuery.of(context).size.width / 2,
+                color: Pallete.whiteColor,
+              ))
+        ],
+      ),
     );
   }
 }

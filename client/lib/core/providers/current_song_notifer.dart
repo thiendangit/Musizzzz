@@ -3,30 +3,34 @@ import 'package:just_audio/just_audio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CurrentSongState {
-  const CurrentSongState({this.song, required this.isPlaying});
+  const CurrentSongState({this.song, required this.isPlaying, this.player});
 
   final Song? song;
   final bool isPlaying;
+  final AudioPlayer? player;
 
-  CurrentSongState copyWith({Song? song, bool? isPlaying}) {
+  CurrentSongState copyWith(
+      {Song? song, bool? isPlaying, AudioPlayer? player}) {
     return CurrentSongState(
       song: song ?? this.song,
       isPlaying: isPlaying ?? this.isPlaying,
+      player: player ?? this.player,
     );
   }
 }
 
 class CurrentSongNotifier extends StateNotifier<CurrentSongState> {
   CurrentSongNotifier()
-      : super(const CurrentSongState(song: null, isPlaying: false));
+      : super(
+            const CurrentSongState(song: null, isPlaying: false, player: null));
 
-  AudioPlayer? _player = AudioPlayer();
+  final AudioPlayer? _player = AudioPlayer();
 
   // Play a new song
   setSong(Song song) async {
     try {
       // Show slab immediately with playing=true for instant icon update
-      state = state.copyWith(song: song, isPlaying: true);
+      state = state.copyWith(song: song, isPlaying: true, player: _player);
 
       // Stop current song if playing
       if (_player?.playing == true) {
@@ -42,7 +46,8 @@ class CurrentSongNotifier extends StateNotifier<CurrentSongState> {
       // If it fails, we'll revert below in catch
       _player?.play();
     } catch (e) {
-      state = const CurrentSongState(song: null, isPlaying: false);
+      state =
+          const CurrentSongState(song: null, isPlaying: false, player: null);
     }
   }
 
@@ -68,9 +73,15 @@ class CurrentSongNotifier extends StateNotifier<CurrentSongState> {
 
   // Stop and clear current song
   clearSong() async {
-    state = const CurrentSongState(song: null, isPlaying: false);
+    state = const CurrentSongState(song: null, isPlaying: false, player: null);
     await _player?.stop();
     await _player?.dispose();
+  }
+
+  seekTo(double value) async {
+    final totalMs = _player?.duration?.inMilliseconds ?? 0;
+    final targetMs = (value * totalMs).toInt();
+    await _player?.seek(Duration(milliseconds: targetMs));
   }
 }
 
