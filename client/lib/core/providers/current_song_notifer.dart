@@ -1,6 +1,8 @@
 import 'package:client/features/home/models/song.dart';
+import 'package:client/features/home/providers/local_song_providers.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 class CurrentSongState {
   const CurrentSongState({this.song, required this.isPlaying, this.player});
@@ -27,10 +29,13 @@ class CurrentSongNotifier extends StateNotifier<CurrentSongState> {
   final AudioPlayer? _player = AudioPlayer();
 
   // Play a new song
-  setSong(Song song) async {
+  setSong(Song song, WidgetRef ref) async {
     try {
       // Show slab immediately with playing=true for instant icon update
       state = state.copyWith(song: song, isPlaying: true, player: _player);
+
+      // Save song to local storage
+      ref.read(localSongNotifierProvider.notifier).saveSong(song);
 
       // Stop current song if playing
       if (_player?.playing == true) {
@@ -39,7 +44,12 @@ class CurrentSongNotifier extends StateNotifier<CurrentSongState> {
 
       // Set new audio source
       await _player?.setAudioSource(
-        AudioSource.uri(Uri.parse(song.songFile)),
+        AudioSource.uri(Uri.parse(song.songFile),
+            tag: MediaItem(
+                id: song.id,
+                title: song.name,
+                artist: song.artist,
+                artUri: Uri.parse(song.thumbnail))),
       );
 
       // Start playing (do not await to avoid UI delay)

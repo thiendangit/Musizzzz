@@ -72,3 +72,21 @@ def get_songs(
 ):
     songs = db.query(Song).all()
     return songs
+
+@router.get("/favorite-song/{song_id}")
+def favorite_song(
+    songId: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    createSong = db.query(Song).filter(Song.id == songId).first()
+
+
+    if not createSong:
+        raise HTTPException(status_code=404, detail="Song not found")
+
+    createSong.favorite = True
+    db.commit()
+    db.refresh(createSong)
+
+    return createSong

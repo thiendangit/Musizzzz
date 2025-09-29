@@ -48,10 +48,10 @@ class HomeRemoteReponsitories {
       final response = await request.send();
 
       final responseBody = await response.stream.bytesToString();
-      var responseDecode = jsonDecode(responseBody) as Map<String, dynamic>;
+      var responseDecode = jsonDecode(responseBody) as Map<dynamic, dynamic>;
 
       if (response.statusCode == 200) {
-        return Right(Song.fromMap(responseDecode));
+        return Right(Song.fromMap(Map<String, dynamic>.from(responseDecode)));
       } else {
         return Left(AppFailure(responseDecode['detail'] ?? 'Unknown error'));
       }
@@ -81,7 +81,9 @@ class HomeRemoteReponsitories {
       final responseDecode = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final songsList = responseDecode as List<dynamic>;
-        return Right(songsList.map((e) => Song.fromMap(e)).toList());
+        return Right(songsList
+            .map((e) => Song.fromMap(Map<String, dynamic>.from(e as Map)))
+            .toList());
       } else {
         return Left(AppFailure(responseDecode['detail']));
       }

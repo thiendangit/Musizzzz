@@ -6,10 +6,12 @@ import 'package:client/features/auth/views/pages/login_page.dart';
 import 'package:client/features/auth/views/pages/signup_page.dart';
 import 'package:client/features/auth/views/pages/forgot_password_page.dart';
 import 'package:client/features/home/views/home_page.dart';
-import 'package:client/features/home/views/upload_song.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive/hive.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +44,21 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   Future<void> _initializeAuth() async {
     try {
+      await JustAudioBackground.init(
+        androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+        androidNotificationChannelName: 'Audio playback',
+        androidNotificationChannelDescription:
+            'This channel is used for audio playback in the background.',
+        androidNotificationOngoing: true,
+      );
+
+      WidgetsFlutterBinding.ensureInitialized();
+      final dir = await getApplicationDocumentsDirectory();
+      Hive.init(dir.path);
+
+      // Initialize Hive and register adapters
+      await Hive.openBox('songs');
+
       await ref.read(authViewModelProvider.notifier).initSharedPreferences();
 
       // Load saved auth data from local storage
