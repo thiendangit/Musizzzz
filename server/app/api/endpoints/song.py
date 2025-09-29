@@ -3,6 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
 from app.db.database import get_db 
+from app.models.favorite import Favorite
 from app.schemas.song import SongCreate, SongUploadRequest, SongResponse
 from app.models.song import Song
 from app.utils.auth import get_current_user
@@ -75,18 +76,49 @@ def get_songs(
 
 @router.get("/favorite-song/{song_id}")
 def favorite_song(
-    songId: str,
+    song_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    songId: str | None = None,
+):
+    # Resolve effective song id (fallback to query param if path literal is passed)
+    effective_song_id = songId if song_id == "{song_id}" and songId else song_id
+    if not effective_song_id:
+        raise HTTPException(status_code=400, detail="song_id is required")
+
+    # Ensure the song exists to avoid FK violations
+    song = db.query(Song).filter(Song.id == effective_song_id).first()
+    if not song:
+        raise HTTPException(status_code=404, detail="Song not found")
+
+    userId = current_user.id
+    existFavorite = db.query(Favorite).filter(Favorite.song_id == effective_song_id, Favorite.user_id == userId).first()
+
+    if not existFavorite:
+        createFavorite = Favorite(
+            id=str(uuid.uuid4()),
+            song_id=effective_song_id,
+            user_id=userId
+        )
+        db.add(createFavorite)
+        db.commit()
+        db.refresh(createFavorite)
+        return {
+            "status": "success",
+            "message": "Song favorited successfully"
+        }
+    else:
+        db.delete(existFavorite)
+        db.commit()
+        return {
+            "status": 'success',
+            "message": 'Song unfavorited successfully'
+        }
+
+@router.get("/get-favorite-songs")
+def get_favorite_songs(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    createSong = db.query(Song).filter(Song.id == songId).first()
-
-
-    if not createSong:
-        raise HTTPException(status_code=404, detail="Song not found")
-
-    createSong.favorite = True
-    db.commit()
-    db.refresh(createSong)
-
-    return createSong
+    songs = db.query(Favorite).filter(Favorite.user_id == current_user.id).all()
+    return songs

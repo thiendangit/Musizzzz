@@ -16,6 +16,8 @@ load_dotenv()
 from app.db.database import Base
 from app.models.auth import User
 from app.models.song import Song
+from app.models.favorite import Favorite
+from typing import Any, Dict, cast
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -35,9 +37,12 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
-def get_url():
+def get_url() -> str:
     """Get database URL from environment variable"""
-    return os.getenv("DATABASE_URL")
+    url = os.getenv("DATABASE_URL")
+    if not url:
+        raise RuntimeError("DATABASE_URL environment variable is not set for Alembic")
+    return url
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -70,7 +75,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    configuration = config.get_section(config.config_ini_section)
+    configuration = cast(Dict[str, Any], config.get_section(config.config_ini_section) or {})
     configuration["sqlalchemy.url"] = get_url()
     
     connectable = engine_from_config(

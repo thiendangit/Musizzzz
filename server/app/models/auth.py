@@ -14,3 +14,5 @@ class User(Base):
     
     # Relationship to songs
     songs = relationship("Song", back_populates="user")
+    # Relationship to favorites
+    favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
