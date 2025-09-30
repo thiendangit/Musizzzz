@@ -78,3 +78,35 @@ class Song {
     );
   }
 }
+
+class FavoriteSong {
+  String id;
+  String userId;
+  String songId;
+  Song song;
+
+  FavoriteSong({
+    required this.id,
+    required this.userId,
+    required this.songId,
+    required this.song,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'song_id': songId,
+      'song': song.toMap(),
+    };
+  }
+
+  factory FavoriteSong.fromMap(Map<String, dynamic> map) {
+    return FavoriteSong(
+      id: map['id']?.toString() ?? '',
+      userId: map['user_id']?.toString() ?? '',
+      songId: map['song_id']?.toString() ?? '',
+      song: Song.fromMap(map['song'] ?? {}),
+    );
+  }
+}

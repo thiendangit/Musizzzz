@@ -1,10 +1,11 @@
 import os
 import uuid
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.db.database import get_db 
 from app.models.favorite import Favorite
 from app.schemas.song import SongCreate, SongUploadRequest, SongResponse
+from app.schemas.favorite import FavoriteCreate
 from app.models.song import Song
 from app.utils.auth import get_current_user
 from app.models.auth import User
@@ -74,17 +75,20 @@ def get_songs(
     songs = db.query(Song).all()
     return songs
 
-@router.get("/favorite-song/{song_id}")
+@router.post("/favorite-song")
 def favorite_song(
-    song_id: str,
+    favorite_data: FavoriteCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    songId: str | None = None,
 ):
-    # Resolve effective song id (fallback to query param if path literal is passed)
-    effective_song_id = songId if song_id == "{song_id}" and songId else song_id
+    print(favorite_data)
+    # Use the songId from the request body
+    effective_song_id = favorite_data.songId
+
+    print(effective_song_id)
+
     if not effective_song_id:
-        raise HTTPException(status_code=400, detail="song_id is required")
+        raise HTTPException(status_code=400, detail="songId is required")
 
     # Ensure the song exists to avoid FK violations
     song = db.query(Song).filter(Song.id == effective_song_id).first()
@@ -120,5 +124,5 @@ def get_favorite_songs(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    songs = db.query(Favorite).filter(Favorite.user_id == current_user.id).all()
+    songs = db.query(Favorite).filter(Favorite.user_id == current_user.id).options(joinedload(Favorite.song)).all()
     return songs

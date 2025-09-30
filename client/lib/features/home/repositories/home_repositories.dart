@@ -91,4 +91,73 @@ class HomeRemoteReponsitories {
       return Left(AppFailure(e.toString()));
     }
   }
+
+  Future<Either<AppFailure, AppSuccess>> favoriteSong(
+      Song song, WidgetRef ref) async {
+    try {
+      final token = await ref.read(authLocalReponsitoriesProvider).getToken();
+
+      if (token == null || token.isEmpty) {
+        return Left(
+            AppFailure('No authentication token found. Please login again.'));
+      }
+
+      final response = await http.post(
+        Uri.parse('${Server.URL}/song/favorite-song'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'x-auth-token': token,
+          'content-type': 'application/json',
+        },
+        body: jsonEncode({
+          'songId': song.id,
+        }),
+      );
+
+      final responseDecode = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return Right(AppSuccess(responseDecode['message']));
+      } else {
+        return Left(AppFailure(responseDecode['detail'] ?? 'Unknown error'));
+      }
+    } catch (e) {
+      return Left(AppFailure(e.toString()));
+    }
+  }
+
+  Future<Either<AppFailure, List<FavoriteSong>>> getFavoriteSongs(
+      Ref ref) async {
+    try {
+      final token = await ref.read(authLocalReponsitoriesProvider).getToken();
+
+      if (token == null || token.isEmpty) {
+        return Left(
+            AppFailure('No authentication token found. Please login again.'));
+      }
+
+      final response = await http.get(
+        Uri.parse('${Server.URL}/song/get-favorite-songs'),
+        headers: {
+          'accept': 'application/json',
+          'Authorization': 'Bearer $token',
+          'x-auth-token': token,
+          'content-type': 'application/json',
+        },
+      );
+
+      final responseDecode = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final songsList = responseDecode as List<dynamic>;
+        return Right(songsList
+            .map((e) =>
+                FavoriteSong.fromMap(Map<String, dynamic>.from(e as Map)))
+            .toList());
+      } else {
+        return Left(AppFailure(responseDecode['detail']));
+      }
+    } catch (e) {
+      return Left(AppFailure(e.toString()));
+    }
+  }
 }

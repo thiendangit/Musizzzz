@@ -21,6 +21,18 @@ Future<List<Song>> getSongs(Ref ref) async {
 }
 
 @riverpod
+Future<List<FavoriteSong>> getFavoriteSongs(Ref ref) async {
+  final homeRemoteRepo = ref.watch(homeRemoteReponsitoriesProvider);
+
+  final result = await homeRemoteRepo.getFavoriteSongs(ref);
+
+  return result.fold(
+    (failure) => throw failure,
+    (favoriteSongs) => favoriteSongs,
+  );
+}
+
+@riverpod
 class HomeViewModel extends _$HomeViewModel {
   late final HomeRemoteReponsitories _homeRemoteRepo;
 
@@ -39,6 +51,19 @@ class HomeViewModel extends _$HomeViewModel {
       (failure) =>
           state = AsyncValue.error(failure.message, StackTrace.current),
       (song) => state = AsyncValue.data(song),
+    );
+    return result;
+  }
+
+  Future<Either<AppFailure, AppSuccess>> favoriteSong(Song song) async {
+    state = const AsyncValue.loading();
+
+    final result = await _homeRemoteRepo.favoriteSong(song, ref as WidgetRef);
+
+    result.fold(
+      (failure) =>
+          state = AsyncValue.error(failure.message, StackTrace.current),
+      (success) => state = AsyncValue.data(success),
     );
     return result;
   }

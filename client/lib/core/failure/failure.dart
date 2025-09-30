@@ -7,3 +7,13 @@ class AppFailure {
     return 'AppFailure(message: $message)';
   }
 }
+
+class AppSuccess {
+  final String message;
+  AppSuccess([this.message = 'Success!']);
+
+  @override
+  String toString() {
+    return 'AppSuccess(message: $message)';
+  }
+}
