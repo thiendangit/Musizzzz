@@ -4,6 +4,7 @@ import 'package:client/core/constants/server.dart';
 import 'package:client/core/failure/failure.dart';
 import 'package:client/features/auth/repositories/auth_local_reponsitories.dart';
 import 'package:client/features/home/models/song.dart';
+import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -116,6 +117,23 @@ class HomeRemoteReponsitories {
 
       final responseDecode = jsonDecode(response.body);
 
+      if (ref.context.mounted) {
+        showDialog(
+          context: ref.context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text(responseDecode['message'] ?? 'Message'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+
       if (response.statusCode == 200) {
         return Right(AppSuccess(responseDecode['message']));
       } else {
@@ -139,7 +157,6 @@ class HomeRemoteReponsitories {
       final response = await http.get(
         Uri.parse('${Server.URL}/song/get-favorite-songs'),
         headers: {
-          'accept': 'application/json',
           'Authorization': 'Bearer $token',
           'x-auth-token': token,
           'content-type': 'application/json',
@@ -150,8 +167,7 @@ class HomeRemoteReponsitories {
       if (response.statusCode == 200) {
         final songsList = responseDecode as List<dynamic>;
         return Right(songsList
-            .map((e) =>
-                FavoriteSong.fromMap(Map<String, dynamic>.from(e as Map)))
+            .map((e) => FavoriteSong.fromMap(Map<String, dynamic>.from(e)))
             .toList());
       } else {
         return Left(AppFailure(responseDecode['detail']));
