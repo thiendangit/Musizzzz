@@ -162,7 +162,7 @@ MusicApp/
 └── README.md
 ```
 
-## 🔧 Development
+## 🔧 Development flow
 
 ### Backend Development
 
