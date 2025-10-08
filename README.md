@@ -26,6 +26,7 @@ A modern music streaming application built with Flutter (client) and FastAPI (se
 Before you begin, ensure you have the following installed:
 
 ### For Flutter Development
+
 - **Flutter SDK** (3.5.4 or higher)
 - **Dart SDK** (included with Flutter)
 - **Android Studio** or **VS Code** with Flutter extensions
